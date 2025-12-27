@@ -174,7 +174,7 @@ def calculate_deductions(gross_wage, month_idx, cumulative_tax_base):
 
 st.set_page_config(page_title="2026 Maaş Maliyet Simülasyonu", layout="wide")
 
-st.title("📊 2026 Yılı Asgari Ücret ve İşveren Maliyeti Simülasyonu")
+st.title("📊 2026 Yılı Ücret ve İşveren Maliyeti Simülasyonu")
 st.markdown("""
 Bu uygulama, yüklenen personel listesi üzerinden 2026 yılı için tahmini aylık ve yıllık işveren maliyetlerini hesaplar.
 Vergi dilimleri, SGK tavanı ve asgari ücret istisnaları **2026 projeksiyonlarına** göre işlenir.
@@ -186,7 +186,7 @@ with st.sidebar:
     
     corporate_tax_rate = st.number_input("Kurumlar Vergisi Oranı (%)", min_value=0.0, max_value=100.0, value=25.0) / 100.0
 
-    st.subheader("SGK Teşvik Oranı (2026/7566 Sayılı Kanun)")
+    st.subheader("SGK Teşvik Oranı")
     incentive_choice = st.radio(
         "İşveren SGK ve Teşvik Durumu Seçiniz:",
         ("5510 - İmalat Sektörü (%5 İndirim)", "5510 - İmalat Dışı Sektörler (%2 İndirim)", "Teşviksiz / Standart (%0)")
@@ -225,7 +225,7 @@ with st.sidebar:
 
 # --- GİRİŞ YÖNTEMİ SEÇİMİ ---
 st.divider()
-input_method = st.radio("Hesaplama Yöntemini Seçiniz:", ("📁 Excel Listesi Yükle", "✍️ Manuel Tekli Hesaplama"), horizontal=True)
+input_method = st.radio("Hesaplama Yöntemini Seçiniz:", ("📁 Excel Listesi Yükle", "✍️ Manuel Hesaplama"), horizontal=True)
 st.divider()
 
 df = None
@@ -322,7 +322,7 @@ if df is not None:
                 
                 # 2. 2026 Hedef Maaşı Belirle
                 
-                if input_method == "✍️ Manuel Tekli Hesaplama":
+                if input_method == "✍️ Manuel Hesaplama":
                     # Manuel modda artış uygulanmaz, direkt girilen tutar (örn: 500.000 net) hedef alınır.
                     target_wage_2026 = raw_wage
                 else:
