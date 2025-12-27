@@ -223,50 +223,84 @@ with st.sidebar:
 
     st.info(f"**Bilgi:** Mevcut maaşlara **%{raise_rate*100:.0f}** oranında artış uygulanarak 2026 maliyetleri hesaplanacaktır.")
 
-# Dosya Yükleme
-uploaded_file = st.file_uploader("Personel Listesini Yükleyiniz (Excel .xls/.xlsx)", type=["xls", "xlsx"])
+# --- GİRİŞ YÖNTEMİ SEÇİMİ ---
+st.divider()
+input_method = st.radio("Hesaplama Yöntemini Seçiniz:", ("📁 Excel Listesi Yükle", "✍️ Manuel Tekli Hesaplama"), horizontal=True)
+st.divider()
 
-if uploaded_file is not None:
-    try:
-        df = pd.read_excel(uploaded_file)
+df = None
+col_wage = "Maaş"
+col_name = "Personel"
+col_dept = "Departman"
 
-        # Sütun İsimlerini Temizle (Boşlukları kırp)
-        df.columns = df.columns.str.strip()
-        
-        st.subheader("📋 Sütun Eşleştirme")
-        st.info("Lütfen Excel dosyanızdaki sütunları aşağıdaki alanlarla eşleştiriniz.")
-        
-        # Sütun Seçimi
-        all_columns = df.columns.tolist()
-        
-        # Tahmin algoritması (default value için)
-        def find_default_col(options, keywords):
-            for col in options:
-                for key in keywords:
-                    if key.lower() in col.lower():
-                        return col
-            return options[0] if options else None
+if input_method == "📁 Excel Listesi Yükle":
+    # Dosya Yükleme
+    uploaded_file = st.file_uploader("Personel Listesini Yükleyiniz (Excel .xls/.xlsx)", type=["xls", "xlsx"])
 
-        col_wage = st.selectbox(
-            "Maaş/Ücret Sütunu (Zorunlu)", 
-            all_columns, 
-            index=all_columns.index(find_default_col(all_columns, ['ücret', 'maas', 'tutar', 'net', 'brut'])) if find_default_col(all_columns, ['ücret', 'maas', 'tutar', 'net', 'brut']) in all_columns else 0
-        )
+    if uploaded_file is not None:
+        try:
+            df = pd.read_excel(uploaded_file)
+
+            # Sütun İsimlerini Temizle (Boşlukları kırp)
+            df.columns = df.columns.str.strip()
+            
+            st.subheader("📋 Sütun Eşleştirme")
+            st.info("Lütfen Excel dosyanızdaki sütunları aşağıdaki alanlarla eşleştiriniz.")
+            
+            # Sütun Seçimi
+            all_columns = df.columns.tolist()
+            
+            # Tahmin algoritması (default value için)
+            def find_default_col(options, keywords):
+                for col in options:
+                    for key in keywords:
+                        if key.lower() in col.lower():
+                            return col
+                return options[0] if options else None
+
+            col_wage = st.selectbox(
+                "Maaş/Ücret Sütunu (Zorunlu)", 
+                all_columns, 
+                index=all_columns.index(find_default_col(all_columns, ['ücret', 'maas', 'tutar', 'net', 'brut'])) if find_default_col(all_columns, ['ücret', 'maas', 'tutar', 'net', 'brut']) in all_columns else 0
+            )
+            
+            col_name = st.selectbox(
+                "Personel Adı Sütunu (Opsiyonel)", 
+                ["Otomatik İsimlendir"] + all_columns, 
+                index=all_columns.index(find_default_col(all_columns, ['ad', 'isim', 'personel', 'calisan'])) + 1 if find_default_col(all_columns, ['ad', 'isim', 'personel', 'calisan']) in all_columns else 0
+            )
+            
+            col_dept = st.selectbox(
+                "Departman Sütunu (Opsiyonel)", 
+                ["Seçiniz"] + all_columns, 
+                index=0
+            )
+        except Exception as e:
+            st.error(f"Dosya okunurken hata oluştu: {e}")
+
+else: # Manuel Giriş
+    st.subheader("✍️ Personel Bilgileri")
+    col1, col2 = st.columns(2)
+    with col1:
+        manual_wage = st.number_input("Güncel Aylık Maaş (TL)", min_value=0.0, value=30000.0, step=1000.0)
+    with col2:
+        manual_name = st.text_input("Personel Adı (Opsiyonel)", value="Yeni Personel")
+    
+    # DataFrame Oluştur
+    df = pd.DataFrame({
+        "Maaş": [manual_wage],
+        "Personel": [manual_name if manual_name else "Personel 1"],
+        "Departman": ["Genel"]
+    })
+    col_wage = "Maaş"
+    col_name = "Personel"
+    col_dept = "Departman"
+
+if df is not None:
+    if st.button("Hesaplamayı Başlat", type="primary"):
+        st.success(f"{len(df)} personel kaydı için hesaplama başlıyor...")
         
-        col_name = st.selectbox(
-            "Personel Adı Sütunu (Opsiyonel)", 
-            ["Otomatik İsimlendir"] + all_columns, 
-            index=all_columns.index(find_default_col(all_columns, ['ad', 'isim', 'personel', 'calisan'])) + 1 if find_default_col(all_columns, ['ad', 'isim', 'personel', 'calisan']) in all_columns else 0
-        )
-        
-        col_dept = st.selectbox(
-            "Departman Sütunu (Opsiyonel)", 
-            ["Seçiniz"] + all_columns, 
-            index=0
-        )
-        
-        if st.button("Hesaplamayı Başlat"):
-            st.success(f"{len(df)} personel kaydı için hesaplama başlıyor...")
+        try:
             
             # --- HESAPLAMA MOTORU ---
             
