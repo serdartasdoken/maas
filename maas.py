@@ -254,13 +254,13 @@ if uploaded_file is not None:
         )
         
         col_name = st.selectbox(
-            "Personel Adı Sütunu (Zorunlu)", 
-            all_columns, 
-            index=all_columns.index(find_default_col(all_columns, ['ad', 'isim', 'personel', 'calisan'])) if find_default_col(all_columns, ['ad', 'isim', 'personel', 'calisan']) in all_columns else 0
+            "Personel Adı Sütunu (Opsiyonel)", 
+            ["Otomatik İsimlendir"] + all_columns, 
+            index=all_columns.index(find_default_col(all_columns, ['ad', 'isim', 'personel', 'calisan'])) + 1 if find_default_col(all_columns, ['ad', 'isim', 'personel', 'calisan']) in all_columns else 0
         )
         
         col_dept = st.selectbox(
-            "Departman Sütunu (Opsiyonel - Yoksa 'Seçiniz' bırakın)", 
+            "Departman Sütunu (Opsiyonel)", 
             ["Seçiniz"] + all_columns, 
             index=0
         )
@@ -293,7 +293,11 @@ if uploaded_file is not None:
                 
                 # Departman
                 dept_val = row.get(col_dept, '-') if col_dept != "Seçiniz" else '-'
-                person_name = row.get(col_name, f"Personel {index}")
+                
+                if col_name == "Otomatik İsimlendir":
+                    person_name = f"Personel {index + 1}"
+                else:
+                    person_name = row.get(col_name, f"Personel {index + 1}")
 
                 # 3. Yıllık Simülasyon
                 emp_results = {
