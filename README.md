@@ -44,4 +44,10 @@ streamlit run maas.py
 
 ## 📄 Lisans
 
-Bu proje açık kaynaklıdır ve MIT lisansı ile sunulmaktadır.
+
+## 👨‍⚖️ Hazırlayan
+
+**Serdar TAŞDÖKEN**  
+*Yeminli Mali Müşavir*  
+[LinkedIn Profili](https://www.linkedin.com/in/serdar-tasdoken/)
+

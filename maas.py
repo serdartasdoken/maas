@@ -226,7 +226,12 @@ with st.sidebar:
     st.info(f"**Bilgi:** Mevcut maaşlara **%{raise_rate*100:.0f}** oranında artış uygulanarak 2026 maliyetleri hesaplanacaktır.")
     
     
-
+    
+    st.markdown("---")
+    st.markdown("### Hazırlayan")
+    st.markdown("**Serdar TAŞDÖKEN**")
+    st.markdown("Yeminli Mali Müşavir")
+    st.markdown("[LinkedIn Profili](https://www.linkedin.com/in/serdar-tasdoken/)")
 
 # --- GİRİŞ YÖNTEMİ SEÇİMİ ---
 st.divider()
