@@ -183,6 +183,8 @@ Vergi dilimleri, SGK tavanı ve asgari ücret istisnaları **2026 projeksiyonlar
 # Sidebar - Girdiler
 with st.sidebar:
     st.header("⚙️ Simülasyon Parametreleri")
+    st.warning("⚠️ **Yasal Uyarı:** Bu uygulama bilgilendirme ve simülasyon amaçlıdır. Nihai bordro hesaplamalarınız ve yasal bildirimleriniz için lütfen mali müşavirinizle veya İK departmanınızla teyitleşiniz.")
+    st.markdown("---")
     
     corporate_tax_rate = st.number_input("Kurumlar Vergisi Oranı (%)", min_value=0.0, max_value=100.0, value=25.0) / 100.0
 
@@ -223,8 +225,8 @@ with st.sidebar:
 
     st.info(f"**Bilgi:** Mevcut maaşlara **%{raise_rate*100:.0f}** oranında artış uygulanarak 2026 maliyetleri hesaplanacaktır.")
     
-    st.markdown("---")
-    st.warning("⚠️ **Yasal Uyarı:** Bu uygulama bilgilendirme ve simülasyon amaçlıdır. Nihai bordro hesaplamalarınız ve yasal bildirimleriniz için lütfen mali müşavirinizle veya İK departmanınızla teyitleşiniz.")
+    
+
 
 # --- GİRİŞ YÖNTEMİ SEÇİMİ ---
 st.divider()
