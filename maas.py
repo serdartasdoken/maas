@@ -231,6 +231,7 @@ with st.sidebar:
     st.markdown("### Hazırlayan")
     st.markdown("**Serdar TAŞDÖKEN**")
     st.markdown("Yeminli Mali Müşavir")
+    st.markdown("✉️ serdartasdoken@gmail.com")
     st.markdown("[LinkedIn Profili](https://www.linkedin.com/in/serdar-tasdoken/)")
 
 # --- GİRİŞ YÖNTEMİ SEÇİMİ ---

@@ -49,5 +49,6 @@ streamlit run maas.py
 
 **Serdar TAŞDÖKEN**  
 *Yeminli Mali Müşavir*  
+✉️ serdartasdoken@gmail.com  
 [LinkedIn Profili](https://www.linkedin.com/in/serdar-tasdoken/)
 
