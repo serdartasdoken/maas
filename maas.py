@@ -393,6 +393,9 @@ if df is not None:
             # Sonuçları Session State'e kaydet (Sonraki etkileşimlerde kaybolmaması için)
             st.session_state['results'] = results
             st.session_state['detailed_payroll_data'] = detailed_payroll_data
+
+        except Exception as e:
+            st.error(f"Bir hata oluştu: {e}")
             
         # --- SONUÇLARIN GÖSTERİMİ (Session State'den oku) ---
         
