@@ -396,140 +396,138 @@ if df is not None:
 
         except Exception as e:
             st.error(f"Bir hata oluştu: {e}")
-            
-        # --- SONUÇLARIN GÖSTERİMİ (Session State'den oku) ---
-        
-        if 'results' in st.session_state and st.session_state['results']:
-            results = st.session_state['results']
-            res_df = pd.DataFrame(results)
-            detailed_data = st.session_state['detailed_payroll_data']
-            
-            # 1. Özet Metrikler
-            total_cost_all = res_df["Toplam_Yillik_Maliyet"].sum()
-            total_tax_saving = res_df["Kurumlar_Vergisi_Tasarrufu"].sum()
-            net_cost_all = res_df["Net_Isveren_Maliyeti"].sum()
-            
-            st.divider()
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Toplam Yıllık İşveren Maliyeti (2026)", f"{total_cost_all:,.2f} TL")
-            col2.metric("Toplam Kurumlar Vergisi Avantajı", f"{total_tax_saving:,.2f} TL")
-            col3.metric("Vergi Sonrası Net Maliyet", f"{net_cost_all:,.2f} TL")
-            st.divider()
-            
-            # 2. Detaylı Tablo
-            st.subheader("Personel Bazlı Detaylar")
-            
-            display_cols = [
-                "Personel", "Mevcut Ücret", "2026 Hedef Ücret", 
-                "Yillik_Net_Ucret", "Yillik_SGK_Isveren", "Toplam_Yillik_Maliyet"
-            ]
-            
-            st.dataframe(res_df[display_cols].style.format({
-                "Mevcut Ücret": "{:,.2f}", 
-                "2026 Hedef Ücret": "{:,.2f}",
-                "Yillik_Net_Ucret": "{:,.2f}",
-                "Yillik_SGK_Isveren": "{:,.2f}",
-                "Toplam_Yillik_Maliyet": "{:,.2f}"
-            }))
-            
-            # 3. Excel İndirme
-            st.subheader("Rapor İndir")
-            
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                res_df.to_excel(writer, index=False, sheet_name='2026_Maliyet_Simulasyonu')
-            
-            st.download_button(
-                label="📥 Detaylı Excel Raporunu İndir",
-                data=output.getvalue(),
-                file_name="2026_Maas_Maliyet_Simulasyonu.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-            
-            # --- 4. PERSONEL BAZLI DETAYLI BORDRO (YENİ) ---
-            st.markdown("---")
-            st.header("📄 Personel Bazlı Detaylı Bordro")
-            st.info("Aşağıdan bir personel seçerek aylık detaylı brütten nete hesap pusulasını görüntüleyebilirsiniz.")
-            
-            selected_person = st.selectbox("Personel Seçiniz:", list(detailed_data.keys()))
-            
-            if selected_person:
-                months_data = detailed_data[selected_person]
-                
-                # Veriyi kullanıcı formatına uygun hale getir
-                # İstenen Kolonlar: 
-                # Ay | Brüt | SGK İşçi | İşsizlik İşçi | GV Matrahı | Kümülatif Matrah | Hesaplanan GV | GV İstisnası | Asgari GV İstisna?? | DV | DV İstisna | Net | SGK İşveren | İşsizlik İşveren | Toplam Maliyet
-                
-                payroll_rows = []
-                totals = {k: 0.0 for k in ["gross_wage", "sgk_worker", "unemp_worker", "income_tax_base", "raw_income_tax", "gv_exemption", "income_tax", "raw_stamp_tax", "dv_exemption", "stamp_tax", "net_pay", "sgk_employer", "unemp_employer", "total_cost"]}
-                
-                for m_item in months_data:
-                    row = {
-                        "Ay": m_item['month_name'],
-                        "Brüt Ücret": m_item['gross_wage'],
-                        "SGK İşçi": m_item['sgk_worker'],
-                        "İşsizlik İşçi": m_item['unemp_worker'],
-                        "GV Matrahı": m_item['income_tax_base'],
-                        "Kümülatif GV Matrahı": m_item['cumulative_tax_base'], # Bunun toplamı olmaz
-                        "Hesaplanan GV": m_item['raw_income_tax'],
-                        "GV İstisnası": m_item['gv_exemption'],
-                        "Ödenecek GV": m_item['income_tax'],
-                        "Hesaplanan DV": m_item['raw_stamp_tax'],
-                        "DV İstisnası": m_item['dv_exemption'],
-                        "Ödenecek DV": m_item['stamp_tax'],
-                        "Net Ele Geçen": m_item['net_pay'],
-                        "SGK İşveren": m_item['sgk_employer'],
-                        "İşsizlik İşveren": m_item['unemp_employer'],
-                        "Toplam Maliyet": m_item['total_cost']
-                    }
-                    payroll_rows.append(row)
-                    
-                    # Toplamları güncelle
-                    for k in totals.keys():
-                        if k in m_item:
-                            totals[k] += m_item[k]
-                
-                # Toplam Satırı Ekle
-                total_row = {
-                    "Ay": "TOPLAM",
-                    "Brüt Ücret": totals['gross_wage'],
-                    "SGK İşçi": totals['sgk_worker'],
-                    "İşsizlik İşçi": totals['unemp_worker'],
-                    "GV Matrahı": totals['income_tax_base'],
-                    "Kümülatif GV Matrahı": 0, # Anlamsız
-                    "Hesaplanan GV": totals['raw_income_tax'],
-                    "GV İstisnası": totals['gv_exemption'],
-                    "Ödenecek GV": totals['income_tax'],
-                    "Hesaplanan DV": totals['raw_stamp_tax'],
-                    "DV İstisnası": totals['dv_exemption'],
-                    "Ödenecek DV": totals['stamp_tax'],
-                    "Net Ele Geçen": totals['net_pay'],
-                    "SGK İşveren": totals['sgk_employer'],
-                    "İşsizlik İşveren": totals['unemp_employer'],
-                    "Toplam Maliyet": totals['total_cost']
-                }
-                payroll_rows.append(total_row)
-                
-                payroll_df = pd.DataFrame(payroll_rows)
-                
-                # Formatlama
-                format_dict = {col: "{:,.2f}" for col in payroll_df.columns if col != "Ay"}
-                
-                st.dataframe(payroll_df.style.format(format_dict))
-                
-                # Excel İndir (Seçili Personel)
-                p_output = io.BytesIO()
-                with pd.ExcelWriter(p_output, engine='openpyxl') as writer:
-                    payroll_df.to_excel(writer, index=False, sheet_name=f'{selected_person[:30]}')
-                
-                st.download_button(
-                    label=f"📥 {selected_person} - Detaylı Bordrosunu İndir",
-                    data=p_output.getvalue(),
-                    file_name=f"Bordro_{selected_person}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-
-    except Exception as e:
-        st.error(f"Bir hata oluştu: {e}")
 else:
-    st.info("Lütfen sol menüden parametreleri ayarlayın ve bir Excel dosyası yükleyin.")
+    if input_method == "📁 Excel Listesi Yükle":
+        st.info("Lütfen sol menüden parametreleri ayarlayın ve bir Excel dosyası yükleyin.")
+            
+# --- SONUÇLARIN GÖSTERİMİ (Session State'den oku) ---
+
+if 'results' in st.session_state and st.session_state['results']:
+    results = st.session_state['results']
+    res_df = pd.DataFrame(results)
+    detailed_data = st.session_state['detailed_payroll_data']
+    
+    # 1. Özet Metrikler
+    total_cost_all = res_df["Toplam_Yillik_Maliyet"].sum()
+    total_tax_saving = res_df["Kurumlar_Vergisi_Tasarrufu"].sum()
+    net_cost_all = res_df["Net_Isveren_Maliyeti"].sum()
+    
+    st.divider()
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Toplam Yıllık İşveren Maliyeti (2026)", f"{total_cost_all:,.2f} TL")
+    col2.metric("Toplam Kurumlar Vergisi Avantajı", f"{total_tax_saving:,.2f} TL")
+    col3.metric("Vergi Sonrası Net Maliyet", f"{net_cost_all:,.2f} TL")
+    st.divider()
+    
+    # 2. Detaylı Tablo
+    st.subheader("Personel Bazlı Detaylar")
+    
+    display_cols = [
+        "Personel", "Mevcut Ücret", "2026 Hedef Ücret", 
+        "Yillik_Net_Ucret", "Yillik_SGK_Isveren", "Toplam_Yillik_Maliyet"
+    ]
+    
+    st.dataframe(res_df[display_cols].style.format({
+        "Mevcut Ücret": "{:,.2f}", 
+        "2026 Hedef Ücret": "{:,.2f}",
+        "Yillik_Net_Ucret": "{:,.2f}",
+        "Yillik_SGK_Isveren": "{:,.2f}",
+        "Toplam_Yillik_Maliyet": "{:,.2f}"
+    }))
+    
+    # 3. Excel İndirme
+    st.subheader("Rapor İndir")
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        res_df.to_excel(writer, index=False, sheet_name='2026_Maliyet_Simulasyonu')
+    
+    st.download_button(
+        label="📥 Detaylı Excel Raporunu İndir",
+        data=output.getvalue(),
+        file_name="2026_Maas_Maliyet_Simulasyonu.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    
+    # --- 4. PERSONEL BAZLI DETAYLI BORDRO (YENİ) ---
+    st.markdown("---")
+    st.header("📄 Personel Bazlı Detaylı Bordro")
+    st.info("Aşağıdan bir personel seçerek aylık detaylı brütten nete hesap pusulasını görüntüleyebilirsiniz.")
+    
+    selected_person = st.selectbox("Personel Seçiniz:", list(detailed_data.keys()))
+    
+    if selected_person:
+        months_data = detailed_data[selected_person]
+        
+        # Veriyi kullanıcı formatına uygun hale getir
+        # İstenen Kolonlar: 
+        # Ay | Brüt | SGK İşçi | İşsizlik İşçi | GV Matrahı | Kümülatif Matrah | Hesaplanan GV | GV İstisnası | Asgari GV İstisna?? | DV | DV İstisna | Net | SGK İşveren | İşsizlik İşveren | Toplam Maliyet
+        
+        payroll_rows = []
+        totals = {k: 0.0 for k in ["gross_wage", "sgk_worker", "unemp_worker", "income_tax_base", "raw_income_tax", "gv_exemption", "income_tax", "raw_stamp_tax", "dv_exemption", "stamp_tax", "net_pay", "sgk_employer", "unemp_employer", "total_cost"]}
+        
+        for m_item in months_data:
+            row = {
+                "Ay": m_item['month_name'],
+                "Brüt Ücret": m_item['gross_wage'],
+                "SGK İşçi": m_item['sgk_worker'],
+                "İşsizlik İşçi": m_item['unemp_worker'],
+                "GV Matrahı": m_item['income_tax_base'],
+                "Kümülatif GV Matrahı": m_item['cumulative_tax_base'], # Bunun toplamı olmaz
+                "Hesaplanan GV": m_item['raw_income_tax'],
+                "GV İstisnası": m_item['gv_exemption'],
+                "Ödenecek GV": m_item['income_tax'],
+                "Hesaplanan DV": m_item['raw_stamp_tax'],
+                "DV İstisnası": m_item['dv_exemption'],
+                "Ödenecek DV": m_item['stamp_tax'],
+                "Net Ele Geçen": m_item['net_pay'],
+                "SGK İşveren": m_item['sgk_employer'],
+                "İşsizlik İşveren": m_item['unemp_employer'],
+                "Toplam Maliyet": m_item['total_cost']
+            }
+            payroll_rows.append(row)
+            
+            # Toplamları güncelle
+            for k in totals.keys():
+                if k in m_item:
+                    totals[k] += m_item[k]
+        
+        # Toplam Satırı Ekle
+        total_row = {
+            "Ay": "TOPLAM",
+            "Brüt Ücret": totals['gross_wage'],
+            "SGK İşçi": totals['sgk_worker'],
+            "İşsizlik İşçi": totals['unemp_worker'],
+            "GV Matrahı": totals['income_tax_base'],
+            "Kümülatif GV Matrahı": 0, # Anlamsız
+            "Hesaplanan GV": totals['raw_income_tax'],
+            "GV İstisnası": totals['gv_exemption'],
+            "Ödenecek GV": totals['income_tax'],
+            "Hesaplanan DV": totals['raw_stamp_tax'],
+            "DV İstisnası": totals['dv_exemption'],
+            "Ödenecek DV": totals['stamp_tax'],
+            "Net Ele Geçen": totals['net_pay'],
+            "SGK İşveren": totals['sgk_employer'],
+            "İşsizlik İşveren": totals['unemp_employer'],
+            "Toplam Maliyet": totals['total_cost']
+        }
+        payroll_rows.append(total_row)
+        
+        payroll_df = pd.DataFrame(payroll_rows)
+        
+        # Formatlama
+        format_dict = {col: "{:,.2f}" for col in payroll_df.columns if col != "Ay"}
+        
+        st.dataframe(payroll_df.style.format(format_dict))
+        
+        # Excel İndir (Seçili Personel)
+        p_output = io.BytesIO()
+        with pd.ExcelWriter(p_output, engine='openpyxl') as writer:
+            payroll_df.to_excel(writer, index=False, sheet_name=f'{selected_person[:30]}')
+        
+        st.download_button(
+            label=f"📥 {selected_person} - Detaylı Bordrosunu İndir",
+            data=p_output.getvalue(),
+            file_name=f"Bordro_{selected_person}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
