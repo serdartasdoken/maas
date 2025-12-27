@@ -322,8 +322,12 @@ if df is not None:
                 
                 # 2. 2026 Hedef Maaşı Belirle
                 
-                multiplier = (1 + raise_rate)
-                target_wage_2026 = raw_wage * multiplier
+                if input_method == "✍️ Manuel Tekli Hesaplama":
+                    # Manuel modda artış uygulanmaz, direkt girilen tutar (örn: 500.000 net) hedef alınır.
+                    target_wage_2026 = raw_wage
+                else:
+                    multiplier = (1 + raise_rate)
+                    target_wage_2026 = raw_wage * multiplier
                 
                 # Departman
                 dept_val = row.get(col_dept, '-') if col_dept != "Seçiniz" else '-'
