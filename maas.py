@@ -222,6 +222,9 @@ with st.sidebar:
     calc_type_key = 'Brüt' if 'Brüt' in calc_method else 'Net'
 
     st.info(f"**Bilgi:** Mevcut maaşlara **%{raise_rate*100:.0f}** oranında artış uygulanarak 2026 maliyetleri hesaplanacaktır.")
+    
+    st.markdown("---")
+    st.warning("⚠️ **Yasal Uyarı:** Bu uygulama bilgilendirme ve simülasyon amaçlıdır. Nihai bordro hesaplamalarınız ve yasal bildirimleriniz için lütfen mali müşavirinizle veya İK departmanınızla teyitleşiniz.")
 
 # --- GİRİŞ YÖNTEMİ SEÇİMİ ---
 st.divider()
